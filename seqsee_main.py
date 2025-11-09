@@ -442,6 +442,7 @@ def generate_edges_svg(data):
 
 
 def generate_svg(data):
+    """Generate the static SVG fragment that renders nodes and edges."""
     # First make sure that the absolute positions are calculated
     calculate_absolute_positions(data)
     # We generate nodes after edges so that they are drawn on top
@@ -449,6 +450,7 @@ def generate_svg(data):
 
 
 def generate_html(data):
+    """Render the full HTML document for a spectral sequence chart."""
     # Generate CSS styles to be placed in <head>
     generate_css_styles(data)
     # Calculate chart dimensions
@@ -467,6 +469,7 @@ def generate_html(data):
 
 
 def set_scale(data):
+    """Update the global ``scale`` used when translating coordinates to pixels."""
     global scale
     scale = get_value_or_schema_default(data, ["header", "chart", "scale"])
 
@@ -539,6 +542,8 @@ def generate_css_styles(data):
 def process_json(input_file, output_file):
     global global_css
 
+    """Load spectral sequence data from ``input_file`` and write HTML output."""
+
     # Load input JSON
     with open(input_file, "r") as f:
         data = json.load(f)
@@ -569,6 +574,8 @@ def process_json(input_file, output_file):
 
 def process_data(data, output_file):
     global global_css
+
+    """Process an in-memory data structure and persist the rendered HTML."""
 
     # validate against schema
     try:

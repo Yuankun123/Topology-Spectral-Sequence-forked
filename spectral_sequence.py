@@ -8,6 +8,8 @@ from collections.abc import Iterable
 
 
 class SpectralSequence:
+    """Container describing the algebraic input for the spectral sequence."""
+
     def __init__(self, domain, gen: list[Symbol], generator_bideg, diff_bideg_coef):
         self.gen = gen
         generator_bideg = Matrix(generator_bideg)
@@ -31,6 +33,7 @@ class SpectralSequence:
         return len(self.gen)
 
     def kill(self, *relations):
+        """Record polynomial relations that generate the page-one kernel."""
         for relation in relations:
             self.relations.append(Poly(relation, *self.gen, domain=self.domain))
 
@@ -75,14 +78,17 @@ class SpectralSequence:
             return res
 
     def get_abs_dimension(self, bigrade: Bidegree):
+        """Return the dimension of the ambient graded piece at ``bigrade``."""
         if bigrade[1] < 0 or (bigrade[1] == 0 and bigrade[0] <= 0):
             return 0
         return len(self.get_abs_basis(bigrade))
 
     def get_abs_bigrade(self, exponent: Iterable[int]) -> Bidegree:
+        """Translate an exponent vector into its absolute bi-degree."""
         return Bidegree(self.generator_bigrades * Matrix(exponent))
 
     def get_abs_info(self, poly: Poly) -> tuple[Bidegree, Vector]:
+        """Return the bi-degree and coordinates of ``poly`` in the absolute basis."""
         abs_bigrade = None
         abs_coordinate = None
         assert not poly.is_zero
@@ -109,6 +115,7 @@ class SpectralSequence:
         return abs_bigrade, abs_coordinate
 
     def add_page(self, known_diff: dict = None):
+        """Create a new page whose differential degree is determined by ``diff_bideg_coef``."""
         if known_diff is None:
             known_diff = {}
         page_n = len(self.pages)

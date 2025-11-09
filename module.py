@@ -9,6 +9,8 @@ from utilities import Matrix, Vector
 
 
 class Module:
+    """Linear data attached to a single bi-degree on a ``Page``."""
+
     def __init__(self, page: Page, bidegree: Bidegree, basis: Matrix, ker_basis: Matrix):
         # initialization should only be called by page.getModule
         self.page = page
@@ -19,6 +21,9 @@ class Module:
         self.page = page
         self.bidegree = bidegree
 
+        # Separate the kernel and spanning basis by simultaneously reducing the
+        # provided matrices.  ``basis_inv`` records the change-of-basis matrix
+        # that takes absolute coordinates to the page basis.
         ker_basis_idx, sp_basis_idx, self.basis_inv = Matrix.multi_reduction(ker_basis, basis)
 
         self.sp_basis: Matrix = basis[:, sp_basis_idx]
@@ -47,6 +52,7 @@ class Module:
         return e.bidegree == self.bidegree
 
     def classify(self, vec: Vector):
+        """Classify a vector: ``0`` for kernel, ``1`` for survivors, ``2`` otherwise."""
         if self.abs_dim == 0:
             if vec.is_zero_matrix:
                 return 0

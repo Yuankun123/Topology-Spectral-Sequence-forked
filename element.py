@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -9,7 +10,10 @@ from sympy import Poly
 
 
 class Bidegree(Vector):
+    """Lightweight vector subclass used to label bi-degrees on the pages."""
+
     def __repr__(self):
+        """Return a descriptive representation used when logging or debugging."""
         return f"Bigrade {self.tolist()}"
 
 
@@ -32,11 +36,17 @@ class HomoElem:
                  expr = None,
                  abs_bideg: Vector = None,
                  abs_coordinate: Vector = None):
-        """
-        Two Modes:
+        """Create a homogeneous element on ``page``.
 
-        1. Polynomial Mode.
-        2. Absolute Coordinate Mode
+        The constructor supports two calling conventions:
+
+        1. **Polynomial mode** – provide a SymPy expression via ``expr``.
+           The polynomial is converted into the internal coordinate system
+           by consulting the spectral sequence configuration.
+        2. **Absolute coordinate mode** – provide ``abs_bideg`` and
+           ``abs_coordinate`` directly.  This is useful when the ambient
+           module basis has already been computed and avoids re-parsing a
+           polynomial expression.
         """
         self.page = page
         ss = page.ss
@@ -53,7 +63,9 @@ class HomoElem:
                 return
             abs_bideg, abs_coordinate = ss.get_abs_info(poly)
 
-        # Step 2: Determine if it is in the kernel and set actual bidegree.
+        # Step 2: Determine if the element survives on the page and record its
+        # actual bidegree.  Elements that are killed by relations are
+        # converted into the zero element by clearing the coordinate.
         subspace = page.get_module(abs_bideg)
         r = subspace.classify(abs_coordinate)
         if r == 2:
@@ -83,15 +95,19 @@ class HomoElem:
             self.poly = Poly(expr, *ss.gen, domain=ss.domain)
 
     def isZero(self):
+        """Return ``True`` when the element corresponds to the zero class."""
         return self.bidegree is None
 
     def __add__(self, other):
+        """Add two elements and reduce the sum back to the ambient page."""
         return HomoElem(self.page, self.poly + other.poly)
 
     def __sub__(self, other):
+        """Subtract two elements by operating on their underlying polynomials."""
         return HomoElem(self.page, self.poly - other.poly)
 
     def __mul__(self, other):
+        """Multiply two elements using polynomial multiplication."""
         return HomoElem(self.page, self.poly * other.poly)
 
     def __eq__(self, other):
@@ -116,6 +132,7 @@ class HomoElem:
         """
 
     def __repr__(self):
+        """Return the polynomial expression associated with the element."""
         return str(self.poly.as_expr())
 
 

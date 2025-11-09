@@ -5,14 +5,13 @@ from warnings import warn
 
 
 class Prime:
-    """
-    A static class used to handle prime number computation efficiently.
-    """
+    """Utility helpers for generating and checking prime numbers."""
     prime_list = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83,
                   89, 97, 101, 103, 107, 109, 113]
 
     @classmethod
     def is_prime(cls, n):
+        """Return ``True`` when ``n`` is prime using a cached sieve."""
         from math import ceil, sqrt
         if n in cls.prime_list:
             return True
@@ -35,6 +34,7 @@ class Prime:
 
     @classmethod
     def first_n_prime(cls, n):
+        """Return the first ``n`` prime numbers, extending the cache on demand."""
         if n <= len(cls.prime_list):
             return cls.prime_list[0:n]
         else:
@@ -47,14 +47,11 @@ class Prime:
 
 
 class Matrix(SMatrix):
-    """
-    Matrix with dictionary order.
-    __eq__ is rewritten to compare the whole matrix.
-    __hash__ calls the hash function for tuples.
-    """
+    """Thin wrapper around SymPy's ``Matrix`` with extra helpers."""
 
     @classmethod
     def hstack(cls, *args):
+        """Concatenate matrices horizontally while skipping empty inputs."""
         non_empty_args = []
         for m in args:
             if m.rows != 0 and m.cols != 0:
@@ -62,6 +59,7 @@ class Matrix(SMatrix):
         return super().hstack(*non_empty_args)
 
     def __lt__(self, other):
+        """Compare matrices entry-wise to support ordering in ``SortedDict``."""
         # noinspection PyTypeChecker
         for i, n in enumerate(self):
             if n < other[i]:
@@ -79,6 +77,13 @@ class Matrix(SMatrix):
 
     @staticmethod
     def multi_reduction(*args: Matrix):
+        """Perform a simultaneous row-reduction of several matrices.
+
+        The method augments the matrices with an identity block so that the
+        same change of basis is applied to each argument.  It returns the pivot
+        columns of every input together with the accumulated change-of-basis
+        matrix.
+        """
         non_empty_args = []
         for m in args:
             if m.rows != 0:
@@ -145,6 +150,8 @@ class Vector(Matrix):
 
 
 class Poly(_Poly):
+    """Extend SymPy ``Poly`` with a friendlier ``str`` representation."""
+
     def __str__(self):
         return str(self.as_expr())
 
@@ -152,6 +159,13 @@ class Poly(_Poly):
 
 
 def _next_config(cur_config: list, bounds: list):
+    """Return the next lexicographic configuration under ``bounds``.
+
+    ``cur_config`` and ``bounds`` describe a mixed-radix counter where every
+    position is capped by the corresponding entry in ``bounds``.  The helper is
+    used by :func:`convex_integral_combinations` to iterate coefficient choices
+    efficiently.
+    """
     # Find the last index that is not at the bound
     critical_index = len(bounds) - 1
     while cur_config[critical_index] == bounds[critical_index]:
@@ -165,24 +179,12 @@ def _next_config(cur_config: list, bounds: list):
 
 
 def convex_integral_combinations(b: Matrix, v: Vector) -> tuple[tuple, ...]:
-    """
-    This function is devoted to solve the following problem:
+    """Enumerate all non-negative integral combinations of ``b`` that sum to ``v``.
 
-    Let $b$ be a length n (>0) collection of 2-dimensional vectors and let $v$ be a specific 2-dimensional vector.
-    Find all combinations of vectors in $b$ with non-negative integer coefficients that can sum up to $v$.
-    We assume that the second component $v$ and those of vectors in $b$ are non-negative. Also, for vectors in b,
-    we assume that when the second component is zero, their first component must be 0.
-
-    Solution:
-    Step 1: If $b$ contains only 1 vector $u$, test if $v$ is a multiple of $u$.
-    Step 2: If $b$ contains exactly 2 or more vectors but all of them are dependent. Find all combinations using
-    brute force
-    Step 3: If there are at least 2 pivots.
-        Step 3.1 If there are exactly 2 vectors: solve the linear system and check if the coefficients work out.
-        Step 3.2 Calculate the bounds of coefficients corresponding to the free columns.
-        (The bounds exists because the second components are non-negative).
-        Step 3.3 Traverse through all linear combinations of the free columns within the bounds and check each case if
-            the coefficients work out.
+    The implementation analyses the rank of ``b`` to decide between a closed
+    form solution and a bounded brute-force search.  The spectral sequence code
+    relies on this helper to enumerate monomials that realise a requested
+    bi-degree.
     """
     n = b.cols
     assert n > 0

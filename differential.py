@@ -10,6 +10,8 @@ from sortedcontainers import SortedDict
 
 
 class Differential:
+    """Compute differentials on a fixed page of the spectral sequence."""
+
     def __init__(self, page: Page, io_pairs: dict, d_bigrade: Bidegree):
         self.page = page
         self.d_bidegree = d_bigrade
@@ -19,6 +21,7 @@ class Differential:
         self.calculated_matrices = SortedDict()
 
     def get_matrix(self, bidegree: Bidegree, debug=False):
+        """Return the matrix describing ``d_r`` on the specified ``bidegree``."""
         if bidegree in self.calculated_matrices:
             return self.calculated_matrices[bidegree]
 

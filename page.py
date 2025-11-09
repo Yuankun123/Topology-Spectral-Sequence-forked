@@ -13,6 +13,8 @@ from module import Module
 
 
 class Page:
+    """A single page of the spectral sequence along with its differential."""
+
     def __init__(self, ss, page_num, io_pairs: dict, d_bigrade):
         self.ss: SpectralSequence = ss
         self.page_num = page_num
@@ -20,6 +22,7 @@ class Page:
         self.d = Differential(self, io_pairs, Bidegree(d_bigrade))
 
     def get_module(self, bigrade: Bidegree):
+        """Return the module at ``bigrade`` caching previously created ones."""
         if bigrade in self.subspaces:
             return self.subspaces[bigrade]
         else:
@@ -28,6 +31,7 @@ class Page:
             return output
 
     def generate_module(self, bigrade) -> Module:
+        """Construct the module for ``bigrade`` using the previous page."""
         if self.page_num == 1:
             return Module(self, bigrade,
                           Matrix.eye(self.ss.get_abs_dimension(bigrade)),
@@ -53,6 +57,7 @@ class Page:
                       Matrix.hstack(*image_prev, prev_page[bigrade].ker_basis))
 
     def __getitem__(self, item):
+        """Convenience access that mirrors the mathematical notation ``E_r^{p,q}``."""
         return self.get_module(Bidegree(item))
 
     # def find_kernels_for_division(self,
